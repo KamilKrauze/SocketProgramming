@@ -1,0 +1,15 @@
+
+/.vs
+/build
+*.vcxproj
+*.filters
+*.user
+/Client/obj
+*.vsidx
+include/Socked/.vs/Socked/v17/.suo
+*.db
+*.json
+*.ipch
+/Server/obj
+*.exe
+*.sln
