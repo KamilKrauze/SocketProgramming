@@ -32,7 +32,7 @@ int main() {
     SKDSocket server_socket{0};
     skdCreateSocket(server_socket, AF_INET, SOCK_STREAM, 0);
     // Step 3: Bind the Socket
-    skdBindSocketStr(server_socket, AF_INET, "0.0.0.0", 1234);
+    skdBindSocket(server_socket, AF_INET, "0.0.0.0", 1234);
 
 
     // Step 4: Listen for Incoming Connections

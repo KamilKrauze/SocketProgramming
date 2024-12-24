@@ -9,7 +9,7 @@ int main() {
     skdCreateSocket(client_socket, AF_INET, SOCK_STREAM, 0);
 
     skdSetSocketOpt(client_socket, SOL_SOCKET, SO_REUSEADDR, 1);
-    skdBindSocketStr(client_socket, AF_INET, "192.168.0.25", 1234);
+    skdBindSocket(client_socket, AF_INET, "192.168.0.25", 1234);
 
 
     // Step 4: Connect to the Server
