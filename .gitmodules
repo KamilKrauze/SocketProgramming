@@ -1,0 +1,3 @@
+[submodule "include/Socked"]
+	path = include/Socked
+	url = https://www.github.com/KamilKrauze/Socked.git
