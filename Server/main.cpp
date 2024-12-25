@@ -9,19 +9,19 @@ void handle_client(SKDSocket& client_socket) {
     char buffer[1024];
     int bytes_received = 0;
 
-    std::printf("Client connected\n");
+    std::cout << "Client connected" << std::endl;
 
     // Communicate with the client
     while ((bytes_received = recv(client_socket.socket, buffer, sizeof(buffer), 0)) > 0) {
         buffer[bytes_received] = '\0'; // Null-terminate the received data
-        std::clog << "Received from client: " << buffer << "\n";
+        std::cout << "Received from client: " << buffer << std::endl;
 
         // Echo the message back to the client
-        send(client_socket.socket, buffer, bytes_received, 0);
+        //send(client_socket.socket, buffer, bytes_received, 0);
     }
 
-    std::printf("Client disconnected\n");
-    //skdCloseSocket(client_socket);
+    std::cout << "Client disconnected" << std::endl;
+    skdCloseSocket(client_socket);
 }
 
 int main() {
@@ -37,7 +37,7 @@ int main() {
 
     // Step 4: Listen for Incoming Connections
     skdCreateListener(server_socket, 5);
-    std::cout << "Server is listening on port " << ntohs(server_socket.address.sin_port) << std::endl;
+    std::cout << "Server is listening on port " << ntohs(server_socket.address.sin_port) << "\n";
 
     while (true) {
         SKDSocket client{0};
@@ -48,9 +48,15 @@ int main() {
             std::cerr << "Accept failed. Error Code: " << WSAGetLastError() << std::endl;
             continue; // Handle the next client
         }
+        else
+        {
+            //handle_client(client);
+            auto fut = std::async(std::launch::async, handle_client, std::ref(client));      
+            fut.get();
+            //break;
+        }
 
         //std::printf("Client connected\n");
-        std::async(std::launch::async, handle_client, std::ref(client));        
     }
 
     skdDestroySocket(server_socket);
