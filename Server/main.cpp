@@ -4,7 +4,9 @@
 
 #include <Socked/socked.h>
 
-// Function to handle a single client
+std::mutex mtx;
+std::atomic_bool shouldQuit = false;
+
 void handle_client(SKDSocket& client_socket) {
     char buffer[1024];
     int bytes_received = 0;
@@ -18,6 +20,12 @@ void handle_client(SKDSocket& client_socket) {
 
         // Echo the message back to the client
         //send(client_socket.socket, buffer, bytes_received, 0);
+    }
+
+    if (!strcmp(buffer, "/quit"))
+    {
+        shouldQuit = true;
+        std::cout << "Client sent KILL cmd." << std::endl;
     }
 
     std::cout << "Client disconnected" << std::endl;
@@ -34,33 +42,27 @@ int main() {
     // Step 3: Bind the Socket
     skdBindSocket(server_socket, AF_INET, "0.0.0.0", 1234);
 
-
     // Step 4: Listen for Incoming Connections
     skdCreateListener(server_socket, 5);
-    std::cout << "Server is listening on port " << ntohs(server_socket.address.sin_port) << "\n";
+    std::cout << "Server is listening on port " << ntohs(server_socket.specs.sin_port) << "\n";
 
-    while (true) {
-        SKDSocket client{0};
-        int client_addr_size = sizeof(client.address);
+    while (!shouldQuit) {
+        SKDSocket client{ 0 };
+        int client_addr_size = sizeof(client.specs);
 
-        client.socket = accept(server_socket.socket, (struct sockaddr*)&client.address, &client_addr_size);
+        client.socket = accept(server_socket.socket, (struct sockaddr*)&client.specs, &client_addr_size);
         if (client.socket == INVALID_SOCKET) {
             std::cerr << "Accept failed. Error Code: " << WSAGetLastError() << std::endl;
             continue; // Handle the next client
         }
-        else
-        {
-            //handle_client(client);
-            auto fut = std::async(std::launch::async, handle_client, std::ref(client));      
-            fut.get();
-            //break;
-        }
 
-        //std::printf("Client connected\n");
+        auto fut = std::async(std::launch::async, handle_client, std::ref(client));
+        mtx.lock();
+        fut.get();
+        mtx.unlock();
     }
 
     skdDestroySocket(server_socket);
     std::cout << "Server shutdown." << std::endl;
-
     return 0;
 }
