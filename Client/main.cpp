@@ -11,13 +11,14 @@ void fetch_data_from_srv()
     while (!shouldQuit.load())
     {
         char buffer[1024];
-        int bytes_received = recv(client_socket.socket, buffer, sizeof(buffer), 0);
-        if (bytes_received > 0) {
-            buffer[bytes_received] = '\0'; // Null-terminate the received data
+        int bytes = 0;
+        bytes = skdReceive(client_socket, buffer, sizeof(buffer), 0);
+        if (bytes > 0) {
+            buffer[bytes] = '\0'; // Null-terminate the received data
             std::cout << buffer << std::endl;
         }
     }
-    std::cout << "\rShutting down recv thread\n";
+    std::cout << "Shutting down recv thread\n";
 }
 
 int main() {
@@ -48,12 +49,12 @@ int main() {
         //std::cin >> message;
         std::cin.getline(message, 1024);
 
-        send(client_socket.socket, message, strlen(message), 0);
+        skdSend(client_socket, message, sizeof(message), 0);
         shouldQuit.store(strcmp(message, "/quit") == 0);
     }
 
     // Step 6: Close Socket and Cleanup
-    skdDestroySocket(client_socket);
+    skdCleanupSocket();
     std::cout << "Client disconnected." << std::endl;
     std::cin.get();
 

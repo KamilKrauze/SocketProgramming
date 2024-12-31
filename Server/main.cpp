@@ -34,7 +34,7 @@ void handle_client(SkdSocket client_socket, int clientID) {
 
     // Communicate with the client
     while (!shouldQuit.load()) {
-        bytes_received = recv(client_socket.socket, buffer, sizeof(buffer), 0);
+        bytes_received = skdReceive(client_socket, buffer, sizeof(buffer), 0);
         if (bytes_received <= 0)
         {
             continue;
@@ -49,12 +49,16 @@ void handle_client(SkdSocket client_socket, int clientID) {
             break;
         }
 
+        if (strcmp(buffer, "/leave") == 0) {
+            break;
+        }
+
         // Echo the message to other clients
         {
             std::lock_guard<std::mutex> lock(clientsMutex);
-            for (const auto& [otherID, otherClient] : clients) {
+            for (auto& [otherID, otherClient] : clients) {
                 if (otherID != clientID) { // Skip the sender
-                    send(otherClient.socket, buffer, bytes_received, 0);
+                    skdSend(otherClient, buffer, bytes_received, 0);
                 }
             }
         }
@@ -71,7 +75,8 @@ void handle_client(SkdSocket client_socket, int clientID) {
     if (shouldQuit.load())
     {
         cleanupClients();
-        skdDestroySocket(server_socket);
+        skdCloseSocket(server_socket);
+        skdCleanupSocket();
         std::cout << "Server shutdown." << std::endl;
     }
 }
@@ -95,10 +100,10 @@ int main() {
 
     int error = 0;
     while (!shouldQuit.load()) {
-        SkdSocket client{0};
+        SkdSocket client{};
         int client_addr_size = sizeof(client.specs);
 
-        client.socket = accept(server_socket.socket, (struct sockaddr*)&client.specs, &client_addr_size);
+        skdAccept(server_socket, client);
         
         if ((error = WSAGetLastError()) != 10004 && client.socket == INVALID_SOCKET) {
             std::cerr << "Accept failed. Error Code: " << error << std::endl;
@@ -121,7 +126,8 @@ int main() {
     // Clean up remaining clients
     cleanupClients();
 
-    skdDestroySocket(server_socket);
+    skdCloseSocket(server_socket);
+    skdCleanupSocket();
     std::cout << "Server shutdown." << std::endl;
     std::cin.get();
     return 0;
