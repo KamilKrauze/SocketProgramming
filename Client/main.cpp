@@ -30,14 +30,16 @@ int main() {
     skdSetSocketOpt(client_socket, SOL_SOCKET, SO_REUSEADDR, 1);
     skdSetSocketOpt(client_socket, SOL_SOCKET, SO_RCVTIMEO, timeout);
 
-    skdSetSocketSpecs(client_socket, AF_INET, "192.168.0.25", 1234);
+    skdSetSocketSpecs(client_socket, AF_INET, "127.0.0.1", 1234);
 
+    skdPrintSocket(client_socket);
 
     // Step 4: Connect to the Server
     skdConnectSocket(client_socket);
-    in_addr addr{};
-    addr.S_un.S_addr = client_socket.specs.address.data;
-    std::cout << "Connected to the server: " << inet_ntoa(addr) << ":" << ntohs(client_socket.specs.port) << "\n";
+    std::cout << "Connected to the server: " 
+        << skdGetIPv4AddressAsHost(client_socket) << ":" 
+        << skdGetPortAsHost(client_socket.specs.port) << "\n";
+
 
     std::thread recv_th = std::thread(fetch_data_from_srv);
 
