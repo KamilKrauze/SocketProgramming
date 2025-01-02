@@ -1,5 +1,7 @@
 #include <iostream>
 #include <thread>
+#include <atomic>
+#include <cstring>
 
 #include <Socked/socked.h>
 
