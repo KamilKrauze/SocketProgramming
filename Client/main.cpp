@@ -23,6 +23,22 @@ void fetch_data_from_srv()
     std::cout << "Shutting down recv thread\n";
 }
 
+uint32_t my_strlen(char* string)
+{
+    if (string == nullptr)
+    {
+        return 0;
+    }
+    
+    char* temp = string;
+    while (*temp != '\0')
+    {
+        ++temp;
+    }
+    int result = temp - string;
+    return result;
+}
+
 int main() {
     skdInitSocket();
 
@@ -34,6 +50,8 @@ int main() {
 
     skdSetSocketSpecs(client_socket, AF_INET, "127.0.0.1", 1234);
 
+    skdPrintSocketAsNetwork(client_socket);
+    skdPrintSocketAsHost(client_socket);
     skdPrintSocket(client_socket);
 
     // Step 4: Connect to the Server
@@ -52,11 +70,12 @@ int main() {
         std::cout << "\r> ";
         //std::cin >> message;
         std::cin.getline(message, 1024);
-
-        skdSend(client_socket, message, sizeof(message), 0);
+        skdSend(client_socket, message, my_strlen(message), 0);
         shouldQuit.store(strcmp(message, "/quit") == 0);
     }
 
+    recv_th.join();
+    
     // Step 6: Close Socket and Cleanup
     skdCleanupSocket();
     std::cout << "Client disconnected." << std::endl;
